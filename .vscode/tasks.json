@@ -1,0 +1,170 @@
+{
+    "tasks": [
+        /* Cleansing */
+        {
+            "label": "rm-bin",
+            "type": "shell",
+            "command": "if (Test-Path ${fileDirname}\\__bin) { Remove-Item ${fileDirname}\\__bin -Verbose -Recurse -Force }",
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false,
+                "group": "cleansing"
+            }
+        },
+        {
+            "label": "rm-temp",
+            "type": "shell",
+            "command": "if (Test-Path ${fileDirname}\\__temp) { Remove-Item ${fileDirname}\\__temp\\* -Verbose -Recurse -Force }",
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false,
+                "group": "cleansing"
+            }
+        },
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "echo cleaned.",
+            "dependsOn": [
+                "rm-bin",
+                "rm-temp"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "never",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false,
+                "group": "cleansing"
+            }
+        },
+
+
+        /* Prepping */
+        {
+            "label": "make-temp",
+            "type": "shell",
+            "command": "if (!(Test-Path ${fileDirname}\\__temp)) { mkdir \"${fileDirname}\\__temp\" }",
+            "presentation": {
+                "echo": true,
+                "reveal": "never",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false,
+                "group": "preparing"
+            }
+        },
+        {
+            "label": "prep",
+            "type": "shell",
+            "command": "echo prepped.",
+            "dependsOn": [
+                "make-temp"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "never",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false,
+                "group": "preparing"
+            }
+        },
+
+
+        /* Copying */
+        {
+            "label": "copy-source",
+            "type": "shell",
+            "command": "$source = \"${fileDirname}\\*\" ; Get-ChildItem -Path $source -Exclude \"${fileDirname}\\__temp\" -Include \"*.h\", \"*.cpp\" -Recurse -File | Copy-Item -Destination \"${fileDirname}\\__temp\"",
+            "options": {
+                "cwd": "${fileDirname}",
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "never",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false,
+                "group": "copying"
+            }
+        },
+        {
+            "label": "copy",
+            "type": "shell",
+            "command": "echo copied.",
+            "dependsOn": [
+                "copy-source"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "never",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false,
+                "group": "copying"
+            }
+        },
+
+
+        /* Building */
+        {
+            "label": "exebuild",
+            "detail": "C/C++: cl.exe build active file",
+            "type": "cppbuild",
+            "command": "cl.exe",
+            "args": [
+                "/Zi",
+                "/EHsc",
+                "/nologo",
+                "/Fe${fileDirname}\\__bin\\${fileDirnameBasename}.exe",
+                "${fileDirname}/__temp/**.cpp"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "options": {
+                "cwd": "${fileDirname}\\__bin"
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "dependsOn": [
+                "clean",
+                "prep",
+                "copy"
+            ],
+            "dependsOrder": "sequence",
+            "presentation": {
+                "echo": true,
+                "reveal": "never",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false,
+                "group": "building"
+            }
+        }
+    ],
+    "version": "2.0.0"
+}
